@@ -6,6 +6,14 @@
          "interval": 305,
          "settings": {"Device": "/dev/sda1",
                       "ReportInodes": "true"}
+        },
+        {"name": "cpu"},
+        {"name": "memory"},
+        {"name": "disk",
+         "settings": {"Disk": "sda"}
+        },
+        {"name": "interface",
+         "settings": {"Interface": "eth0"}
         }
     ]
 }
