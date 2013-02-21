@@ -1,0 +1,11 @@
+{
+    "server": {"host": "184.73.92.62", "username": "user", "password": "secret" },
+    "defaults": {"interval": 300},
+    "plugins": [
+        {"name": "df",
+         "interval": 305,
+         "settings": {"Device": "/dev/sda1",
+                      "ReportInodes": "true"}
+        }
+    ]
+}

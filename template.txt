@@ -1,0 +1,27 @@
+
+LoadPlugin syslog
+LoadPlugin network
+
+{{#load}}
+<LoadPlugin {{plugname}}>
+   Interval {{pluginterval}}
+</LoadPlugin>
+{{/load}}
+
+Interval     {{interval}}
+
+<Plugin network>
+    <Server "{{host}}">
+        SecurityLevel "Encrypt"
+        Username "{{username}}"
+        Password "{{password}}"
+    </Server>
+</Plugin>
+
+{{#plugins}}
+<Plugin {{plugname}}>
+  {{#settings}}
+    {{setname}} "{{setval}}"
+  {{/settings}}
+</Plugin>
+{{/plugins}}
