@@ -1,0 +1,43 @@
+sudo apt-get install mongodb graphite-carbon git build-essential autoconf libtool scons
+sudo apt-get build-dep collectd
+
+Install mongo client
+git clone https://github.com/mongodb/mongo-c-driver.git
+cd mongo-c-driver
+scons
+sudo make install
+
+Install collectd
+git clone git@github.com:sseshachala/collectd.git
+cd collectd
+git fetch origin
+git checkout -t origin/xervmon
+./configure --enable-write_mongodb
+make
+sudo make install
+
+
+Graphite:
+sudo apt-get install libapache2-mod-php5 php5-mongo php5-mysqlnd libapache2-mod-wsgi
+sudo apt-get install python-django python-mysqldb python-django-tagging python-cairo
+sudo apt-get install graphite-carbon python-whisper mysql-server
+sudo pip install graphite-web
+
+edit /etc/graphite/storage-schemas.conf, delete the default_1min_for_1day
+section and add
+
+[everything_1min_13months]
+priority = 100
+pattern = .*
+retentions = 1m:395d
+
+copy graphite.apache.conf to /etc/apache2/sites-available/graphite
+sudo a2ensite graphite
+cd /opt/graphite/conf
+cp graphite.wsgi.example graphite.wsgi
+chgrp www-data
+
+
+edit /etc/default/graphite-carbon
+change enabled to true
+sudo /etc/init.d/carbon-cache start
