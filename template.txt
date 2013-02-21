@@ -2,13 +2,13 @@
 LoadPlugin syslog
 LoadPlugin network
 
+Interval     {{interval}}
+
 {{#load}}
 <LoadPlugin {{plugname}}>
    Interval {{pluginterval}}
 </LoadPlugin>
 {{/load}}
-
-Interval     {{interval}}
 
 <Plugin network>
     <Server "{{host}}">
@@ -24,4 +24,5 @@ Interval     {{interval}}
     {{setname}} "{{setval}}"
   {{/settings}}
 </Plugin>
+
 {{/plugins}}
