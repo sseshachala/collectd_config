@@ -9,9 +9,7 @@
         },
         {"name": "cpu"},
         {"name": "memory"},
-        {"name": "disk",
-         "settings": {"Disk": "sda"}
-        },
+        {"name": "disk" },
         {"name": "interface",
          "settings": {"Interface": "eth0"}
         }
