@@ -18,7 +18,7 @@ sudo make install
 
 
 Graphite:
-sudo apt-get install libapache2-mod-php5 php5-mongo php5-mysqlnd libapache2-mod-wsgi
+sudo apt-get install libapache2-mod-php5 php5-mongo php5-mysqlnd libapache2-mod-wsgi php5-curl
 sudo apt-get install python-django python-mysqldb python-django-tagging python-cairo
 sudo apt-get install graphite-carbon python-whisper mysql-server
 sudo pip install graphite-web
