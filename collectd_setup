@@ -13,6 +13,7 @@ git clone https://github.com/sseshachala/collectd.git
 cd collectd
 git fetch origin
 git checkout -t origin/xervmon
+sudo ./build.sh
 ./configure --enable-write_mongodb
 make
 sudo make install
