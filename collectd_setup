@@ -25,7 +25,7 @@ sudo apt-get install python-django python-mysqldb python-django-tagging python-c
 sudo apt-get install graphite-carbon python-whisper mysql-server
 sudo pip install graphite-web
 
-edit /etc/graphite/storage-schemas.conf, delete the default_1min_for_1day
+edit /etc/carbon/storage-schemas.conf, delete the default_1min_for_1day
 section and add
 
 [everything_1min_13months]
