@@ -33,11 +33,11 @@ priority = 100
 pattern = .*
 retentions = 1m:395d
 
-copy graphite.apache.conf to /etc/apache2/sites-available/graphite
+copy example-graphite-vhost.conf to /etc/apache2/sites-available/graphite
 sudo a2ensite graphite
 cd /opt/graphite/conf
 cp graphite.wsgi.example graphite.wsgi
-chgrp www-data
+chgrp www-data graphite.wsgi
 
 
 edit /etc/default/graphite-carbon
