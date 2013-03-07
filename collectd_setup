@@ -14,8 +14,8 @@ cd collectd
 git fetch origin
 git checkout -t origin/xervmon
 sudo ./build.sh
-./configure --enable-write_mongodb
-make
+sudo ./configure --enable-write_mongodb
+sudo make
 sudo make install
 
 
