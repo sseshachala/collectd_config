@@ -1,3 +1,4 @@
+sudo apt-get update
 sudo apt-get install mongodb graphite-carbon git build-essential autoconf libtool scons
 sudo apt-get build-dep collectd
 
@@ -8,12 +9,13 @@ scons
 sudo make install
 
 Install collectd
-git clone git@github.com:sseshachala/collectd.git
+git clone https://github.com/sseshachala/collectd.git
 cd collectd
 git fetch origin
 git checkout -t origin/xervmon
-./configure --enable-write_mongodb
-make
+sudo ./build.sh
+sudo ./configure --enable-write_mongodb
+sudo make
 sudo make install
 
 
