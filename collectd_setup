@@ -18,6 +18,10 @@ sudo ./configure --enable-write_mongodb
 sudo make
 sudo make install
 
+Init script (debian and ubuntu):
+sudo cp init.d-collectd-debian /etc/init.d/collectd
+sudo update-rc.d collectd defaults
+
 
 Graphite:
 sudo apt-get install libapache2-mod-php5 php5-mongo php5-mysqlnd libapache2-mod-wsgi php5-curl
