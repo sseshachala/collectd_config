@@ -23,6 +23,13 @@ sudo cp init.d-collectd-debian /etc/init.d/collectd
 sudo update-rc.d collectd defaults
 
 
+Server setup:
+copy server.conf to /opt/collectd/etc/collectd.conf
+
+Client setup:
+Do not need to install mongo client.
+use make_config.php and json to generate collectd.conf
+
 Graphite:
 sudo apt-get install libapache2-mod-php5 php5-mongo php5-mysqlnd libapache2-mod-wsgi php5-curl
 sudo apt-get install python-django python-mysqldb python-django-tagging python-cairo
