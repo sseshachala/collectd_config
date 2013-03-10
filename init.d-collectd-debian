@@ -32,7 +32,7 @@ CONFIGFILE=/opt/collectd/etc/collectd.conf
 PIDFILE=/var/run/collectd.pid
 
 USE_COLLECTDMON=1
-COLLECTDMON_DAEMON=/usr/sbin/collectdmon
+COLLECTDMON_DAEMON=/opt/collectd/sbin/collectdmon
 COLLECTDMON_PIDFILE=/var/run/collectdmon.pid
 
 MAXWAIT=30
