@@ -29,7 +29,15 @@ function configuration_for($json) {
         $settings = array();
         if (property_exists($plugin, "settings")) {
             foreach ($plugin->settings as $k => $v) {
-                array_push($settings, array("setname" => $k, "setval" => $v));
+                $setvals = array();
+                if (is_array($v)) {
+                    foreach ($v as $theval) {
+                        $setvals[] = array("val" => $theval);
+                    }
+                } else {
+                    $setvals[] = array("val" => $v);
+                }
+                array_push($settings, array("setname" => $k, "setvals" => $setvals));
             }
             array_push($data["plugins"], array("plugname" => $name, "settings" => $settings));
         }

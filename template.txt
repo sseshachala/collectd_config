@@ -21,7 +21,7 @@ Interval     {{interval}}
 {{#plugins}}
 <Plugin {{plugname}}>
   {{#settings}}
-    {{setname}} "{{setval}}"
+    {{setname}} {{#setvals}}"{{val}}" {{/setvals}}
   {{/settings}}
 </Plugin>
 
