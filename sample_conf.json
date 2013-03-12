@@ -12,6 +12,10 @@
         {"name": "disk" },
         {"name": "interface",
          "settings": {"Interface": "eth0"}
+        },
+        {"name": "exec",
+         "interval": 864000,
+         "settings": {"Exec": ["ubuntu", "/opt/collectd/bin/sysinfo.sh", "user"]}
         }
     ]
 }

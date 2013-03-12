@@ -1,10 +1,11 @@
 #!/bin/bash
 
-COLLECTD_HOSTNAME="${COLLECTD_HOSTNAME:-localhost}"
+TIME=`date +%s`
+HOSTNAME="${COLLECTD_HOSTNAME:-localhost}"
 
 SYSTEM=`uname -s`
 ARCH=`uname -m`
-
+CUSTOMER=$1
 
 if [ -f /etc/lsb-release ]; then
   . /etc/lsb-release
@@ -17,10 +18,9 @@ fi
 
 HOSTNAME=`hostname`
 
-echo system: $SYSTEM
-echo arch: $ARCH
-echo dist: $DIST
-echo host: $HOSTNAME
-ip -4 -o addr | awk '!/^[0-9]*: ?lo|link\/ether/ {print "IP_"$2": "$4}'
-ip -6 -o addr | awk '!/^[0-9]*: ?lo|link\/ether/ {print "IP6_"$2": "$4}'
-ip -o link | awk '/^[0-9]*: .*link\/ether/ {print "MAC_"$2" "$(NF-2)}'
+msg="system: $SYSTEM^customer: $CUSTOMER^arch: $ARCH^dist: $DIST^host: $HOSTNAME^"
+msg=$msg`ip -4 -o addr | awk 'BEGIN{ORS="^";}!/^[0-9]*: ?lo|link\/ether/ {print "IP_"$2": "$4}'`
+msg=$msg`ip -6 -o addr | awk 'BEGIN{ORS="^";}!/^[0-9]*: ?lo|link\/ether/ {print "IP6_"$2": "$4}'`
+msg=$msg`ip -o link | awk 'BEGIN{ORS="^";}/^[0-9]*: .*link\/ether/ {print "MAC_"$2" "$(NF-2)}'`
+
+echo PUTNOTIF severity=okay time=$TIME host=$HOSTNAME plugin=server_data message=\"$msg\"

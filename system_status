@@ -1,0 +1,39 @@
+the status script is a shell (bash) script that uses collectd notifications.
+
+Since this information does not change often, the interval can be much
+larger (1 day=86400)
+
+<LoadPlugin exec>
+        Interval 86400
+</LoadPlugin>
+<Plugin exec>
+Exec "ubuntu" "/home/ubuntu/details.sh" "user"
+</Plugin>
+
+The first argument is the user to run it as (can't be root), the second is
+the script (must be chmod +x), the third the customer login.
+
+Use this json to make it:
+
+
+OUTPUT FORMAT:
+The output uses the collectd NOTIF format:
+
+PUTNOTIF severity=okay time=$TIME host=$HOSTNAME plugin=server_data message=".."
+
+if you send a notification, then the python reading script will add it to
+database=xervmon_collectd_<customername>, collection=<plugin>
+
+the 'message' field needs to be specially formatted. All of the message must
+be on the same line. The format is like this:
+key1: val1^key2: val2^key3: val3
+that is, each record is separated by the ^ character. Use ':<space>' to
+separate key and values. This will be turned into json:
+{"key1":"val1", ...etc}
+You MUST have a space after the :
+You MUST have a field called "customer"
+The message field MUST have "" marks around it.
+
+Here is an example of the system status output:
+PUTNOTIF severity=okay time=1363129600 host=ip-10-122-169-96 plugin=server_data message="system: Linux^customer: xervmon^arch: i686^dist: Ubuntu 12.10^host: ip-10-122-169-96^IP_eth0: 10.122.169.96/24^IP6_eth0: fe80::1031:38ff:fe0b:ca96/64^MAC_eth0: 12:31:38:0b:ca:96^"
+
