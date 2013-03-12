@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import collectd
-import time
+import datetime
 try:
   from pymongo import MongoClient as Mongo
 except ImportError:
@@ -16,7 +16,7 @@ def read_notif(notif):
       continue
     k,v = p.split(": ")
     data[k] = v
-  data["last_updated"] = time.time()
+  data["last_updated"] = datetime.datetime.now()
   customer = data["customer"]
   conn = Mongo()
   dbname = "xervmon_collectd_%s" % (customer, )
