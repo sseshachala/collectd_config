@@ -65,6 +65,13 @@ edit /etc/carbon/carbon.conf and change STORAGE_DIR    = /var/lib/graphite/
 to
 STORAGE_DIR    = /vol/graphite/
 
+edit /opt/graphite/webapp/graphite/local_settings.py
+and change WHISPER_DIR = '/var/lib/graphite/whisper'
+to
+WHISPER_DIR = '/vol/graphite/whisper'
+
+Storage configuration
+---------------------
 edit /etc/carbon/storage-schemas.conf, delete the default_1min_for_1day
 section and add
 
