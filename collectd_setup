@@ -27,6 +27,14 @@ Server setup:
 copy server.conf to /opt/collectd/etc/collectd.conf
 sudo apt-get install python-pymongo
 
+Mongodb:
+Move mongodb database to a different location, e.g. /vol/mongodb:
+mkdir /vol/mongodb
+chown mongodb:mongodb /vol/mongodb
+edit /etc/mongodb.conf -
+  change line dbpath=/var/lib/mongodb to
+dbpath=/vol/mongodb
+
 Python module:
 the "writesys.py" module needs to be put somewhere. suggest
 /opt/collectd/share/collectd/python ( or /usr/share/collectd/python)
@@ -47,6 +55,15 @@ sudo apt-get install libapache2-mod-php5 php5-mongo php5-mysqlnd libapache2-mod-
 sudo apt-get install python-django python-mysqldb python-django-tagging python-cairo
 sudo apt-get install graphite-carbon python-whisper mysql-server
 sudo pip install graphite-web
+
+If you want to store graphite database in a different location
+  (e.g. /vol/graphite)
+mkdir /vol/graphite
+chown _graphite:_graphite /vol/graphite
+
+edit /etc/carbon/carbon.conf and change STORAGE_DIR    = /var/lib/graphite/
+to
+STORAGE_DIR    = /vol/graphite/
 
 edit /etc/carbon/storage-schemas.conf, delete the default_1min_for_1day
 section and add
