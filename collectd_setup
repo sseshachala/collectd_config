@@ -64,11 +64,15 @@ chown _graphite:_graphite /vol/graphite
 edit /etc/carbon/carbon.conf and change STORAGE_DIR    = /var/lib/graphite/
 to
 STORAGE_DIR    = /vol/graphite/
+and LOCAL_DATA_DIR = /var/lib/graphite/whisper/
+to
+LOCAL_DATA_DIR = /vol/graphite/whisper/
 
 edit /opt/graphite/webapp/graphite/local_settings.py
 and change WHISPER_DIR = '/var/lib/graphite/whisper'
 to
 WHISPER_DIR = '/vol/graphite/whisper'
+
 
 Storage configuration
 ---------------------
