@@ -73,6 +73,10 @@ and change WHISPER_DIR = '/var/lib/graphite/whisper'
 to
 WHISPER_DIR = '/vol/graphite/whisper'
 
+sudo mkdir -p /vol/graphite/log/webapp
+sudo chgrp www-data /vol/graphite/log/webapp
+sudo chmod g+w /vol/graphite/log/webapp
+sudo touch /vol/graphite/index
 
 Storage configuration
 ---------------------
