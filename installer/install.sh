@@ -63,7 +63,6 @@ function InstallDependencies {
 	sudo apt-get -y install python-pip python-dev python-cairo
 
 	sudo apt-get -y install mongodb python-pymongo
-	sudo apt-get -y install python-whisper
 	# Apache, php, mysql
 	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password password strangehat'
 	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password_again password strangehat'
@@ -145,8 +144,7 @@ function ConfigureCollectd {
 	sudo chmod a+x /etc/init.d/collectd
         sudo update-rc.d collectd defaults
 
-	sudo mkdir /etc/collectd/
-	sudo cp -i ${CONFDIR}/collectd-server.conf /etc/collectd/collectd.conf
+	sudo cp -i ${CONFDIR}/collectd-server.conf /opt/collectd/etc/collectd.conf
 
 	sudo touch /opt/collectd/etc/collectd.passwd
 	sudo cp ${CONFDIR}/writesys.py /opt/collectd/share/collectd/python
@@ -172,7 +170,7 @@ function ConfigureMongo {
 
 ## Install Graphite/Carbon/Whisper
 function ConfigureCarbon {
-	sudo pip install carbon
+	sudo pip install carbon whisper
 	sudo pip install graphite-web
 
 	if [ ! -d $CONFIG_GRAPHITE_DIR ]; then
@@ -183,7 +181,7 @@ function ConfigureCarbon {
 
 	sudo cp $CONFDIR/init.d-carbon-cache /etc/init.d/carbon-cache
 	sudo chmod a+x /etc/init.d/carbon-cache
-        sudo update-rc.d carbon-cache
+        sudo update-rc.d carbon-cache defaults
 
 	sudo cp $CONFDIR/carbon.conf.example carbon.conf
 	sudo cp graphite.wsgi.example graphite.wsgi
@@ -192,7 +190,7 @@ function ConfigureCarbon {
 
 	sudo sed -i "s:#LOCAL_DATA_DIR#:$CONFIG_GRAPHITE_DIR/whisper/:" /opt/graphite/conf/carbon.conf
 	sudo sed -i "s:#STORAGE_DIR#:$CONFIG_GRAPHITE_DIR:" /opt/graphite/conf/carbon.conf
-	sudo sed -i "s:^#WHISPER_DIR.*$:WHISPER_DIR=$CONFIG_GRAPHITE_DIR/whisper:" /opt/graphite/webapp/graphite/local_settings.py
+	sudo sed -i "s:^#WHISPER_DIR.*$:WHISPER_DIR='$CONFIG_GRAPHITE_DIR/whisper':" /opt/graphite/webapp/graphite/local_settings.py
 	
 	# apache
 	sudo cp $CONFDIR/graphite-vhost.conf /etc/apache2/sites-available/graphite

@@ -19,16 +19,15 @@ PIDFILE=/var/run/$NAME.pid
 CONFFILE=/opt/graphite/conf/carbon.conf
 DAEMON_ARGS="--config=$CONFFILE --pidfile=$PIDFILE --logdir=/var/log/carbon/ start"
 SCRIPTNAME=/etc/init.d/$NAME
+CARBON_CACHE_ENABLED=true
 
 [ -x "$DAEMON" ] || exit 0
 
-[ -r /etc/default/graphite-carbon ] && . /etc/default/graphite-carbon
-
-. /lib/init/vars.sh
+#. /lib/init/vars.sh
 
 . /lib/lsb/init-functions
 
-if [ ! -r $CONFFILE]; then
+if [ ! -r $CONFFILE ]; then
 	[ "$VERBOSE" != no ] && echo "Missing $CONFFILE - not starting."
 	exit 0
 fi
