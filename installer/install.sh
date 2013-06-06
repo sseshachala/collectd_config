@@ -81,7 +81,7 @@ function MongoPHP {
 	# In 12.04 LTS, there is no php5-mongo package, so use the driver from
 	# the mongo client archive
 	. /etc/lsb-release
-	if `echo "$DISTRIB_RELEASE > 12.04" | bc`; then 
+	if `echo "$DISTRIB_RELEASE > 12.04" | bc`; then
 		sudo apt-get -y install php5-mongo
 	else
 		sudo ${PECLCOMM} install -f mongo
@@ -165,7 +165,7 @@ function ConfigureMongo {
 		OLDPATH=`awk 'BEGIN{FS="="} /^dbpath/ {print $2}' /etc/mongodb.conf`
 		sudo rm -rf $OLDPATH
 	fi
-	sudo sed -i "s:^dbpath=.*$:dbpath=$CONFIG_MONGO_DIR:" /etc/mongodb.conf	
+	sudo sed -i "s:^dbpath=.*$:dbpath=$CONFIG_MONGO_DIR:" /etc/mongodb.conf
 	sudo service mongodb restart
 }
 
@@ -192,7 +192,7 @@ function ConfigureCarbon {
 	sudo sed -i "s:#LOCAL_DATA_DIR#:$CONFIG_GRAPHITE_DIR/whisper/:" /opt/graphite/conf/carbon.conf
 	sudo sed -i "s:#STORAGE_DIR#:$CONFIG_GRAPHITE_DIR:" /opt/graphite/conf/carbon.conf
 	sudo sed -i "s:^#WHISPER_DIR.*$:WHISPER_DIR='$CONFIG_GRAPHITE_DIR/whisper':" /opt/graphite/webapp/graphite/local_settings.py
-	
+
 	# apache
 	sudo cp $CONFDIR/graphite-vhost.conf /etc/apache2/sites-available/graphite
 	sudo a2dissite default
@@ -235,19 +235,15 @@ function ExtractResources {
 	done
 }
 
-## Check with the user for each component to be installed.
-#/usr/bin/clear
+/usr/bin/clear
 echo "   We will now begin installation of various components of Xervmon server"
+echo "   If you only want to install some of the packages add them as arguments:"
+echo "   - mongodb"
+echo "   - graphite"
+echo "   - collectd"
+echo "   e.g. ./install.sh mongodb graphite"
+echo "   add no arguments to install all packages"
 echo ""
-echo "   Order of Installation is as follows:"
-echo "     0. Extract Resources"
-echo "     1. Install dependencies"
-echo "     2. Install and configure mongodb"
-echo "     3. Install and configure graphite"
-echo "     4. Perfwatcher Libraries"
-echo "     5. Xervmon Collectd Server"
-echo ""
-echo "   MESSAGE: User will be prompted at each stage for approval to proceed"
 echo "   MESSAGE: If the installation fails at any point, please refer to the"
 echo "   MESSAGE: ${LOGFILE} and make amends and continue with the installation"
 echo ""
@@ -256,6 +252,19 @@ echo "    and mongodb files in $CONFIG_MONGO_DIR (\$CONFIG_MONGO_DIR)"
 echo "    If you want these in a different place, exit now (^C) and change the"
 echo "    configuration at the top of this file."
 
+
+echo "Press [return] to continue"
+read
+
+
+# Check for arguments. If no arguments, we install everything, otherwise
+# we only install the args that have been provided
+if [ $# -eq 0 ]; then
+    args="graphite mongodb collectd"
+else
+    args="$@"
+fi
+
 echo "Extracting resources..."
 ExtractResources
 echo "Done"
@@ -263,27 +272,36 @@ echo "Done"
 echo "MESSAGE: Installing additional dependencies"
 InstallDependencies
 
-echo "MESSAGE: Installing Mongo php drivers"
-MongoPHP
+for a in $args; do
+    if [ $a == "mongodb" ]; then
+        echo "MESSAGE: Installing Mongo php drivers"
+        MongoPHP
 
-echo "MESSAGE: Installing Mongo drivers"
-InstallMongoC
+        echo "MESSAGE: Installing Mongo drivers"
+        InstallMongoC
 
-echo "MESSAGE: Installing Mongodb"
-ConfigureMongo
+        echo "MESSAGE: Installing Mongodb"
+        ConfigureMongo
+    fi
 
-echo "MESSAGE: Installing carbon"
-ConfigureCarbon
+    if [ $a == "graphite" ]; then
+        echo "MESSAGE: Installing carbon"
+        ConfigureCarbon
+    fi
 
-echo "MESSAGE: Installing perfmon dependencies"
-InstallJSONC
-InstallLibmicroHTTPD
+    if [ $a == "collectd" ]; then
+        echo "MESSAGE: Installing perfmon dependencies"
+        InstallJSONC
+        InstallLibmicroHTTPD
 
-echo "MESSAGE: Installing collectd"
-InstallXervmonCollectd
+        echo "MESSAGE: Installing collectd"
+        InstallXervmonCollectd
 
-echo "MESSAGE: Configuring Collectd"
-ConfigureCollectd
+        echo "MESSAGE: Configuring Collectd"
+        ConfigureCollectd
+    fi
+
+done
 
 ## Bring us back to the original folder location
 cd ${SCRIPTLOC}
