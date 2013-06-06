@@ -65,7 +65,8 @@ function InstallDependencies {
 	sudo apt-get -y install mongodb python-pymongo
 	sudo apt-get -y install python-whisper
 	# Apache, php, mysql
-	# XXX: Pre-configure mysql root password
+	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password password strangehat'
+	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password_again password strangehat'
 	sudo apt-get -y install apache2 php5 php5-dev php5-cli php-pear php5-mysql mysql-server mysql-client
 	sudo apt-get -y install libapache2-mod-php5 php5-mysqlnd libapache2-mod-wsgi php5-curl
 	sudo apt-get -y install python-django python-mysqldb python-django-tagging python-cairo
@@ -74,6 +75,7 @@ function InstallDependencies {
 
 	# perfwatch/rrdtool
 	sudo apt-get -y install rrdtool
+	echo "MESSAGE: Set MySQL Server password to strangehat"
 }
 
 function MongoPHP {
@@ -92,13 +94,12 @@ function MongoPHP {
 
 ## Compile and Install Mongo Client
 function InstallMongoC {
-	if (cd ${MONGOCDRIVER_DIR} && scons >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1) ; then
-		echo "MESSAGE: Mongo Client installation succeeded"
-	else
-		echo "ERROR: Mongo Client install FAILED"
-		echo "ERROR: Please refer to log, ${LOGFILE}, for more details"
-		exit 1
-	fi
+	cd resources
+	git clone https://github.com/mongodb/mongo-c-driver.git
+	cd mongo-c-driver
+	git fetch --tags
+	git checkout -b v0.7.1
+	scons >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1
 }
 
 ## Compile and Install json-c
@@ -127,40 +128,34 @@ function InstallLibmicroHTTPD {
 
 ## Compile and Install xervmon-collectd-pw.
 function InstallXervmonCollectd {
-xstatus="true"
 	# 1. Run the compile related tasks in unison
-	if (cd ${XERVCOLLECTD_DIR} && ./build.sh >> ${LOGFILE} 2>&1 && ./configure --enable-top --enable-cpu --enable-rrdtool --enable-write_mongodb --enable-jsonrpc --enable-notify_file --enable-basic_aggregator >> ${LOGFILE} 2>&1 && make >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1) ; then
-	# 2. Run the configuration related tasks
-		if (cd ${XERVCOLLECTD_DIR} && cp -i src/types-perfwatcher.db /etc && sudo cp $CONFDIR/init.d-collectd-debian /etc/init.d/collectd && chmod a+x /etc/init.d/collectd && mkdir /etc/collectd/ && cp -i ${CONFDIR}/collectd.conf /etc/collectd); then
-			xstatus="true"
-		else
-			xstatus="false"
-		fi
+	if (cd ${XERVCOLLECTD_DIR} && ./build.sh >> ${LOGFILE} 2>&1 && CFLAGS="-Wno-error" ./configure --enable-top --enable-cpu --enable-rrdtool --enable-write_mongodb --enable-jsonrpc --enable-notify_file --enable-basic_aggregator >> ${LOGFILE} 2>&1 && make >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1) ; then
+		echo "MESSAGE: Xervmon Collectd PW installation succeeded"
 	else
-		xstatus="false"
-	fi
-	if [ ${xstatus} = "false" ]; then
 		echo "ERROR: Xervmon Collectd PW installation FAILED"
 		echo "ERROR: Please refer to log, ${LOGFILE}, for more details"
-		cd ${XERVCOLLECTD_DIR}/core && make clean
 		exit 1
-	else
-		echo "MESSAGE: Xervmon Collectd PW installation succeeded"
 	fi
 }
 
 function ConfigureCollectd {
-	true
-	# TODO: Move writesys into the right place
-	# Copy the server configuration file in
-	# Create the initial password file
+	cd ${XERVCOLLECTD_DIR}
+	sudp cp -i src/types-perfwatcher.db /etc
+	sudo cp $CONFDIR/init.d-collectd-debian /etc/init.d/collectd
+	sudo chmod a+x /etc/init.d/collectd
+        sudo update-rc.d collectd defaults
 
-	# 3. Finally, apache related tasks
-			if (a2enmod php5 && a2enmod proxy && a2enmod proxy_http && service apache2 restart); then
-				echo "MESSAGE: Xervmon Collectd PW installation succeeded"
-			else
-				xstatus="false"
-			fi
+	sudo mkdir /etc/collectd/
+	sudo cp -i ${CONFDIR}/collectd-server.conf /etc/collectd/collectd.conf
+
+	sudo touch /opt/collectd/etc/collectd.passwd
+	sudo cp ${CONFDIR}/writesys.py /opt/collectd/share/collectd/python
+
+	sudo a2enmod php5
+	sudo a2enmod proxy
+	sudo a2enmod proxy_http
+	sudo service apache2 restart
+	sudo service collectd restart
 }
 
 function ConfigureMongo {
@@ -168,10 +163,11 @@ function ConfigureMongo {
 		echo "Creating mongo configuration directory $CONFIG_MONGO_DIR"
 		sudo mkdir -p $CONFIG_MONGO_DIR
 		sudo chown mongodb:mongodb $CONFIG_MONGO_DIR
-		# TODO: If we change the mongo path, we should delete the old one
+		OLDPATH=`awk 'BEGIN{FS="="} /^dbpath/ {print $2}' /etc/mongodb.conf`
+		sudo rm -rf $OLDPATH
 	fi
 	sudo sed -i "s:^dbpath=.*$:dbpath=$CONFIG_MONGO_DIR:" /etc/mongodb.conf	
-	sudo /etc/init.d/mongodb restart
+	sudo service mongodb restart
 }
 
 ## Install Graphite/Carbon/Whisper
@@ -182,16 +178,21 @@ function ConfigureCarbon {
 	if [ ! -d $CONFIG_GRAPHITE_DIR ]; then
 		echo "Creating graphite configuration directory $CONFIG_GRAPHITE_DIR"
 		sudo mkdir -p $CONFIG_GRAPHITE_DIR
-		#sudo chown _graphite:_graphite $CONFIG_GRAPHITE_DIR
 	fi
 	cd /opt/graphite/conf
-	# TODO: Option carbon configuration file
-        # If carbon from apt, config file is elsewhere and there's a
-        # init script (change /etc/default), otherwise we need to launch it ourselves
-	sudo cp carbon.conf.example carbon.conf
+
+	sudo cp $CONFDIR/init.d-carbon-cache /etc/init.d/carbon-cache
+	sudo chmod a+x /etc/init.d/carbon-cache
+        sudo update-rc.d carbon-cache
+
+	sudo cp $CONFDIR/carbon.conf.example carbon.conf
 	sudo cp graphite.wsgi.example graphite.wsgi
 	sudo chgrp www-data graphite.wsgi
 	sudo cp $CONFDIR/storage-schemas.conf .
+
+	sudo sed -i "s:#LOCAL_DATA_DIR#:$CONFIG_GRAPHITE_DIR/whisper/:" /opt/graphite/conf/carbon.conf
+	sudo sed -i "s:#STORAGE_DIR#:$CONFIG_GRAPHITE_DIR:" /opt/graphite/conf/carbon.conf
+	sudo sed -i "s:^#WHISPER_DIR.*$:WHISPER_DIR=$CONFIG_GRAPHITE_DIR/whisper:" /opt/graphite/webapp/graphite/local_settings.py
 	
 	# apache
 	sudo cp $CONFDIR/graphite-vhost.conf /etc/apache2/sites-available/graphite
@@ -260,31 +261,30 @@ echo "Extracting resources..."
 ExtractResources
 echo "Done"
 
-echo -n "Proceed to install Mongo Client Driver [y/n]: "
-read USER_ANS
-if [ ${USER_ANS}X = "yX" ]; then
-	InstallMongoC
-	USER_ANS="n"
-fi
+echo "MESSAGE: Installing additional dependencies"
+InstallDependencies
 
-echo -n "Proceed to install Perfwatcher Libraries [y/n]: "
-read USER_ANS
-if [ ${USER_ANS}X = "yX" ]; then
-	InstallJSONC
-	InstallLibmicroHTTPD
-	USER_ANS="n"
-fi
+echo "MESSAGE: Installing Mongo php drivers"
+MongoPHP
 
-echo -n "Proceed to install Xervmon Collectd Server [y/n]: "
-read USER_ANS
-if [ ${USER_ANS}X = "yX" ]; then
-	InstallXervmonCollectd
-	USER_ANS="n"
-fi
+echo "MESSAGE: Installing Mongo drivers"
+InstallMongoC
 
-# Configure MongoDB
-# Configure Carbon
-# Configure Xervmon Collectd
+echo "MESSAGE: Installing Mongodb"
+ConfigureMongo
+
+echo "MESSAGE: Installing carbon"
+ConfigureCarbon
+
+echo "MESSAGE: Installing perfmon dependencies"
+InstallJSONC
+InstallLibmicroHTTPD
+
+echo "MESSAGE: Installing collectd"
+InstallXervmonCollectd
+
+echo "MESSAGE: Configuring Collectd"
+ConfigureCollectd
 
 ## Bring us back to the original folder location
 cd ${SCRIPTLOC}
