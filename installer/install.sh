@@ -66,7 +66,7 @@ function InstallDependencies {
 	# Apache, php, mysql
 	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password password strangehat'
 	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password_again password strangehat'
-	sudo apt-get -y install apache2 php5 php5-dev php5-cli php-pear php5-mysql mysql-server mysql-client
+	sudo apt-get -y install apache2 php5 php5-dev php5-cli php-pear mysql-server mysql-client
 	sudo apt-get -y install libapache2-mod-php5 php5-mysqlnd libapache2-mod-wsgi php5-curl
 	sudo apt-get -y install python-django python-mysqldb python-django-tagging python-cairo
 	# We install collectd from source, but we can just use the dependencies that exist in apt
@@ -99,6 +99,7 @@ function InstallMongoC {
 	git fetch --tags
 	git checkout -b v0.7.1
 	scons >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1
+	sudo ldconfig
 }
 
 ## Compile and Install json-c
@@ -139,12 +140,12 @@ function InstallXervmonCollectd {
 
 function ConfigureCollectd {
 	cd ${XERVCOLLECTD_DIR}
-	sudp cp -i src/types-perfwatcher.db /etc
+	sudo cp -i src/types-perfwatcher.db /etc
 	sudo cp $CONFDIR/init.d-collectd-debian /etc/init.d/collectd
 	sudo chmod a+x /etc/init.d/collectd
         sudo update-rc.d collectd defaults
 
-	sudo cp -i ${CONFDIR}/collectd-server.conf /opt/collectd/etc/collectd.conf
+	sudo cp ${CONFDIR}/collectd-server.conf /opt/collectd/etc/collectd.conf
 
 	sudo touch /opt/collectd/etc/collectd.passwd
 	sudo cp ${CONFDIR}/writesys.py /opt/collectd/share/collectd/python
