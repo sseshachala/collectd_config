@@ -29,12 +29,8 @@ LOGDIR="${SCRIPTLOC}/logs"
 LOGFILE="${LOGDIR}/xinstall.log"
 RESOURCESDIR="${SCRIPTLOC}/resources"
 CONFDIR="${SCRIPTLOC}/conf"
-CARBON_DIR="${RESOURCESDIR}/carbon-0.9.10"
-GRAPHITE_DIR="${RESOURCESDIR}/graphite-web-0.9.10"
 JSONC_DIR="${RESOURCESDIR}/json-c-0.10"
 LIBMICROHTTPD_DIR="${RESOURCESDIR}/libmicrohttpd-0.9.22"
-MONGOCDRIVER_DIR="${RESOURCESDIR}/mongo-c-driver"
-WHISPER_DIR="${RESOURCESDIR}/whisper-0.9.10"
 XERVCOLLECTD_DIR="${RESOURCESDIR}/collectd"
 
 ##################################################
@@ -223,7 +219,7 @@ fi
 ## Uncompress all the required resources for the installation
 ## These are stored in resources folder
 function ExtractResources {
-	for lib in ${CARBON_DIR}.tar.gz ${GRAPHITE_DIR}.tar.gz ${JSONC_DIR}.tar.gz ${LIBMICROHTTPD_DIR}.tar.gz ${MONGOCDRIVER_DIR}.tar.gz ${WHISPER_DIR}.tar.gz ${XERVCOLLECTD_DIR}.tar.gz
+	for lib in ${JSONC_DIR}.tar.gz ${LIBMICROHTTPD_DIR}.tar.gz ${XERVCOLLECTD_DIR}.tar.gz
 	do
 		if [ ! -r ${lib} ]; then
 			echo "ERROR: Library, ${lib} is unreadable in ${RESOURCESDIR} folder"
