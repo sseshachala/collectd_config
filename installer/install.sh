@@ -35,7 +35,7 @@ JSONC_DIR="${RESOURCESDIR}/json-c-0.10"
 LIBMICROHTTPD_DIR="${RESOURCESDIR}/libmicrohttpd-0.9.22"
 MONGOCDRIVER_DIR="${RESOURCESDIR}/mongo-c-driver"
 WHISPER_DIR="${RESOURCESDIR}/whisper-0.9.10"
-XERVCOLLECTD_DIR="${RESOURCESDIR}/collectd-pw"
+XERVCOLLECTD_DIR="${RESOURCESDIR}/collectd"
 
 ##################################################
 #### FUNCTIONS
@@ -129,10 +129,10 @@ function InstallLibmicroHTTPD {
 ## Compile and Install xervmon-collectd-pw.
 function InstallXervmonCollectd {
 	# 1. Run the compile related tasks in unison
-	if (cd ${XERVCOLLECTD_DIR} && ./build.sh >> ${LOGFILE} 2>&1 && CFLAGS="-Wno-error" ./configure --enable-top --enable-cpu --enable-rrdtool --enable-write_mongodb --enable-jsonrpc --enable-notify_file --enable-basic_aggregator >> ${LOGFILE} 2>&1 && make >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1) ; then
-		echo "MESSAGE: Xervmon Collectd PW installation succeeded"
+	if (cd ${XERVCOLLECTD_DIR} && ./build.sh >> ${LOGFILE} 2>&1 && CFLAGS="-Wno-error" ./configure --enable-top --enable-cpu --enable-rrdtool --enable-write_mongodb  --enable-notify_file --enable-basic_aggregator >> ${LOGFILE} 2>&1 && make >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1) ; then
+		echo "MESSAGE: Xervmon Collectd installation succeeded"
 	else
-		echo "ERROR: Xervmon Collectd PW installation FAILED"
+		echo "ERROR: Xervmon Collectd installation FAILED"
 		echo "ERROR: Please refer to log, ${LOGFILE}, for more details"
 		exit 1
 	fi
@@ -140,7 +140,7 @@ function InstallXervmonCollectd {
 
 function ConfigureCollectd {
 	cd ${XERVCOLLECTD_DIR}
-	sudo cp -i src/types-perfwatcher.db /etc
+	# sudo cp -i src/types-perfwatcher.db /etc
 	sudo cp $CONFDIR/init.d-collectd-debian /etc/init.d/collectd
 	sudo chmod a+x /etc/init.d/collectd
         sudo update-rc.d collectd defaults
