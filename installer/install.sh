@@ -211,6 +211,10 @@ function ConfigureCarbon {
 ##################################################
 
 #### SANITY CHECKS
+if [ ! -d ${LOGDIR} ]; then
+	mkdir -p ${LOGDIR}
+fi
+
 # If log file is unwritable, exit.
 if [ ! -w ${LOGDIR} ]; then
 	echo "${LOGDIR} is unwritable. Please correct." && exit 1
