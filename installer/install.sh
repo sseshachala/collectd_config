@@ -89,7 +89,7 @@ function MongoPHP {
 
 ## Compile and Install Mongo Client
 function InstallMongoC {
-	cd resources
+	cd $RESOURCESDIR
 	git clone https://github.com/mongodb/mongo-c-driver.git
 	cd mongo-c-driver
 	git fetch --tags
@@ -124,6 +124,8 @@ function InstallLibmicroHTTPD {
 
 ## Compile and Install xervmon-collectd-pw.
 function InstallXervmonCollectd {
+	cd $RESOURCESDIR
+	git clone https://github.com/sseshachala/collectd.git
 	# 1. Run the compile related tasks in unison
 	if (cd ${XERVCOLLECTD_DIR} && ./build.sh >> ${LOGFILE} 2>&1 && CFLAGS="-Wno-error" ./configure --enable-top --enable-cpu --enable-rrdtool --enable-write_mongodb  --enable-notify_file --enable-basic_aggregator >> ${LOGFILE} 2>&1 && make >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1) ; then
 		echo "MESSAGE: Xervmon Collectd installation succeeded"
@@ -223,7 +225,7 @@ fi
 ## Uncompress all the required resources for the installation
 ## These are stored in resources folder
 function ExtractResources {
-	for lib in ${JSONC_DIR}.tar.gz ${LIBMICROHTTPD_DIR}.tar.gz ${XERVCOLLECTD_DIR}.tar.gz
+	for lib in ${JSONC_DIR}.tar.gz ${LIBMICROHTTPD_DIR}.tar.gz
 	do
 		if [ ! -r ${lib} ]; then
 			echo "ERROR: Library, ${lib} is unreadable in ${RESOURCESDIR} folder"
