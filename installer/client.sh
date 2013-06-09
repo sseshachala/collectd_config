@@ -26,7 +26,8 @@ LOGFILE="${LOGDIR}/xinstall.log"
 RESOURCESDIR="${SCRIPTLOC}/resources"
 CONFDIR="${SCRIPTLOC}/conf"
 JSONC_DIR="${RESOURCESDIR}/json-c-0.10"
-XERVCOLLECTD_DIR="${RESOURCESDIR}/collectd-pw"
+XERVCOLLECTD_DIR="${RESOURCESDIR}/collectd"
+LIBMICROHTTPD_DIR="${RESOURCESDIR}/libmicrohttpd-0.9.22"
 
 ##################################################
 #### FUNCTIONS
@@ -41,15 +42,24 @@ function usage {
 	echo "Usage: ./install.sh"
 }
 
+function doerror {
+	echo "ERROR when performing installation. Refer to log ${LOGFILE}"
+	exit 1
+}
+
 ## Will trigger cleanup if it gets the signals mentioned
 trap "CleanUp" SIGQUIT SIGKILL SIGTERM
 
 ## Add/Remove Build Tools
 function InstallDependencies {
 	# All dependencies for a server. Assuming an ubuntu server
-	sudo apt-get update
+	sudo apt-get update >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
+	sudo apt-get -y install git build-essential autoconf libtool >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 	# We install collectd from source, but we can just use the dependencies that exist in apt
-	sudo apt-get -y build-dep collectd
+	sudo apt-get -y build-dep collectd >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 }
 
 
@@ -79,6 +89,8 @@ function InstallLibmicroHTTPD {
 
 ## Compile and Install xervmon-collectd-pw.
 function InstallXervmonCollectd {
+	cd ${RESOURCESDIR}
+	git clone https://github.com/sseshachala/collectd.git
 	# 1. Run the compile related tasks in unison
 	if (cd ${XERVCOLLECTD_DIR} && ./build.sh >> ${LOGFILE} 2>&1 && CFLAGS="-Wno-error" ./configure --enable-top --enable-cpu --enable-rrdtool --enable-notify_file --enable-basic_aggregator >> ${LOGFILE} 2>&1 && make >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1) ; then
 		echo "MESSAGE: Xervmon Collectd PW installation succeeded"
@@ -91,12 +103,13 @@ function InstallXervmonCollectd {
 
 function ConfigureCollectd {
 	cd ${XERVCOLLECTD_DIR}
-	sudo cp -i src/types-perfwatcher.db /etc
 	sudo cp $CONFDIR/init.d-collectd-debian /etc/init.d/collectd
 	sudo chmod a+x /etc/init.d/collectd
-    sudo update-rc.d collectd defaults
+	sudo update-rc.d collectd defaults
 
-	sudo cp ${CONFDIR}/collectd-server.conf /opt/collectd/etc/collectd.conf
+	sudo cp ${CONFDIR}/collectd-client.conf /opt/collectd/etc/collectd.conf
+	sudo cp ${CONFDIR}/system_details.sh /opt/collectd/bin
+	sudo chmod +x /opt/collectd/bin/system_details.sh
 
 	sudo service collectd restart
 }
@@ -105,6 +118,10 @@ function ConfigureCollectd {
 ##################################################
 
 #### SANITY CHECKS
+
+if [ ! -d ${LOGDIR} ]; then
+	mkdir ${LOGDIR}
+fi
 # If log file is unwritable, exit.
 if [ ! -w ${LOGDIR} ]; then
 	echo "${LOGDIR} is unwritable. Please correct." && exit 1
@@ -113,7 +130,7 @@ fi
 ## Uncompress all the required resources for the installation
 ## These are stored in resources folder
 function ExtractResources {
-	for lib in ${JSONC_DIR}.tar.gz ${LIBMICROHTTPD_DIR}.tar.gz ${XERVCOLLECTD_DIR}.tar.gz
+	for lib in ${JSONC_DIR}.tar.gz ${LIBMICROHTTPD_DIR}.tar.gz
 	do
 		if [ ! -r ${lib} ]; then
 			echo "ERROR: Library, ${lib} is unreadable in ${RESOURCESDIR} folder"
