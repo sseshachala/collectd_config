@@ -216,7 +216,6 @@ function ConfigureCarbon {
 
 	# manage.py syncdb, etc
 	cd /opt/graphite/webapp/graphite
-	sudo cp local_settings.py.example local_settings.py
 	sudo -u www-data python manage.py syncdb --noinput
 }
 
