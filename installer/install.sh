@@ -204,6 +204,7 @@ function ConfigureCarbon {
 
 	# apache
 	sudo cp $CONFDIR/graphite-vhost.conf /etc/apache2/sites-available/graphite
+	sudo cp $CONFDIR/xervmon.passwd /etc/apache2/
 	sudo a2dissite default
 	sudo a2ensite graphite
 	sudo /etc/init.d/apache2 reload
