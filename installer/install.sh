@@ -17,9 +17,6 @@ CONFIG_GRAPHITE_DIR=/vol/graphite
 #### Script settings, do not change
 SCRIPTLOC=`pwd`
 PYTHONCOMM=`which python`
-PIPCOMM=`which pip`
-PECLCOMM=`which pecl`
-USER_ANS="n"
 
 ##################################################
 #### DEPENDENT VARIABLES
@@ -46,45 +43,53 @@ function usage {
 	echo "Usage: ./install.sh"
 }
 
+function doerror {
+	echo "ERROR when performing installation. Refer to log ${LOGFILE}"
+	exit 1
+}
+
 ## Will trigger cleanup if it gets the signals mentioned
 trap "CleanUp" SIGQUIT SIGKILL SIGTERM
 
 ## Add/Remove Build Tools
 function InstallDependencies {
 	# All dependencies for a server. Assuming an ubuntu server
-	sudo apt-get update
+	sudo apt-get update >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 	# build tools
-	sudo apt-get -y install git build-essential autoconf libtool scons
+	sudo apt-get -y install git build-essential autoconf libtool scons >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 	# Python
-	sudo apt-get -y install python-pip python-dev python-cairo
+	sudo apt-get -y install python-pip python-dev python-cairo >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 
-	sudo apt-get -y install mongodb python-pymongo
+	sudo apt-get -y install mongodb python-pymongo >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 	# Apache, php, mysql
-	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password password strangehat'
-	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password_again password strangehat'
-	sudo apt-get -y install apache2 php5 php5-dev php5-cli php-pear mysql-server mysql-client
-	sudo apt-get -y install libapache2-mod-php5 php5-mysqlnd libapache2-mod-wsgi php5-curl
-	sudo apt-get -y install python-django python-mysqldb python-django-tagging python-cairo
+	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password password strangehat' >> ${LOGFILE} 2>&1
+	sudo debconf-set-selections <<< 'mysql-server-5.5 mysql-server/root_password_again password strangehat' >> ${LOGFILE} 2>&1
+	sudo apt-get -y install apache2 php5 php5-dev php5-cli php-pear mysql-server mysql-client >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
+	sudo apt-get -y install libapache2-mod-php5 php5-mysqlnd libapache2-mod-wsgi php5-curl >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
+	sudo apt-get -y install python-django python-mysqldb python-django-tagging python-cairo >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 	# We install collectd from source, but we can just use the dependencies that exist in apt
-	sudo apt-get -y build-dep collectd
+	sudo apt-get -y build-dep collectd >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 
 	# perfwatch/rrdtool
-	sudo apt-get -y install rrdtool
+	sudo apt-get -y install rrdtool >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 	echo "MESSAGE: Set MySQL Server password to strangehat"
 }
 
 function MongoPHP {
-	# In 12.04 LTS, there is no php5-mongo package, so use the driver from
-	# the mongo client archive
-	. /etc/lsb-release
-	if `echo "$DISTRIB_RELEASE > 12.04" | bc`; then
-		sudo apt-get -y install php5-mongo
-	else
-		sudo ${PECLCOMM} install -f mongo
-	fi
+	sudo pecl install -f mongo >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 	PHPINI=/etc/php5/conf.d/mongo.ini
 	echo "MESSAGE: Adding mongo.so to the ${PHPINI} file"
-	echo -e "; added by xervmon installer\nextension=mongo.so" > sudo tee ${PHPINI}
+	echo -e "; added by xervmon installer\nextension=mongo.so" | sudo tee ${PHPINI}
 }
 
 ## Compile and Install Mongo Client
@@ -93,8 +98,9 @@ function InstallMongoC {
 	git clone https://github.com/mongodb/mongo-c-driver.git
 	cd mongo-c-driver
 	git fetch --tags
-	git checkout -b v0.7.1
+	git checkout v0.7.1
 	scons >> ${LOGFILE} 2>&1 && sudo make install >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 	sudo ldconfig
 }
 
@@ -145,7 +151,8 @@ function ConfigureCollectd {
 
 	sudo cp ${CONFDIR}/collectd-server.conf /opt/collectd/etc/collectd.conf
 
-	sudo touch /opt/collectd/etc/collectd.passwd
+	echo "xervmon:xervmon" | sudo tee /opt/collectd/etc/collectd.passwd
+	sudo mkdir -p /opt/collectd/share/collectd/python
 	sudo cp ${CONFDIR}/writesys.py /opt/collectd/share/collectd/python
 
 	sudo a2enmod php5
@@ -169,8 +176,10 @@ function ConfigureMongo {
 
 ## Install Graphite/Carbon/Whisper
 function ConfigureCarbon {
-	sudo pip install carbon whisper
-	sudo pip install graphite-web
+	sudo pip install carbon whisper >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
+	sudo pip install graphite-web >> ${LOGFILE} 2>&1
+	if [ $? -ne 0 ]; then doerror; fi
 
 	if [ ! -d $CONFIG_GRAPHITE_DIR ]; then
 		echo "Creating graphite configuration directory $CONFIG_GRAPHITE_DIR"
@@ -181,6 +190,7 @@ function ConfigureCarbon {
 	sudo cp $CONFDIR/init.d-carbon-cache /etc/init.d/carbon-cache
 	sudo chmod a+x /etc/init.d/carbon-cache
         sudo update-rc.d carbon-cache defaults
+	sudo service carbon-cache start
 
 	sudo cp $CONFDIR/carbon.conf.example carbon.conf
 	sudo cp graphite.wsgi.example graphite.wsgi
@@ -189,6 +199,7 @@ function ConfigureCarbon {
 
 	sudo sed -i "s:#LOCAL_DATA_DIR#:$CONFIG_GRAPHITE_DIR/whisper/:" /opt/graphite/conf/carbon.conf
 	sudo sed -i "s:#STORAGE_DIR#:$CONFIG_GRAPHITE_DIR:" /opt/graphite/conf/carbon.conf
+	sudo cp /opt/graphite/webapp/graphite/local_settings.py.example /opt/graphite/webapp/graphite/local_settings.py
 	sudo sed -i "s:^#WHISPER_DIR.*$:WHISPER_DIR='$CONFIG_GRAPHITE_DIR/whisper':" /opt/graphite/webapp/graphite/local_settings.py
 
 	# apache
@@ -198,7 +209,7 @@ function ConfigureCarbon {
 	sudo /etc/init.d/apache2 reload
 
 	# This makes the wsgi webapp work
-	sudo mkdir /etc/apache2/run
+	sudo mkdir -p /etc/apache2/run
 	sudo chown -R www-data /opt/graphite/storage/log
 	sudo chgrp www-data /opt/graphite/storage
 	sudo chmod 775 /opt/graphite/storage
