@@ -163,6 +163,7 @@ function ConfigureCollectd {
 }
 
 function ConfigureMongo {
+id -u mongodb &>/dev/null ||sudo adduser --disabled-password --gecos "" mongodb
 	if [ ! -d $CONFIG_MONGO_DIR ]; then
 		echo "Creating mongo configuration directory $CONFIG_MONGO_DIR"
 		sudo mkdir -p $CONFIG_MONGO_DIR
