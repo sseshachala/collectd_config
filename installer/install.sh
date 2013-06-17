@@ -191,7 +191,6 @@ function ConfigureCarbon {
 	sudo cp $CONFDIR/init.d-carbon-cache /etc/init.d/carbon-cache
 	sudo chmod a+x /etc/init.d/carbon-cache
         sudo update-rc.d carbon-cache defaults
-	sudo service carbon-cache start
 
 	sudo cp $CONFDIR/carbon.conf.example carbon.conf
 	sudo cp graphite.wsgi.example graphite.wsgi
@@ -219,6 +218,9 @@ function ConfigureCarbon {
 	# manage.py syncdb, etc
 	cd /opt/graphite/webapp/graphite
 	sudo -u www-data python manage.py syncdb --noinput
+
+	# Start carbon-cache
+	sudo service carbon-cache start
 }
 
 #################### MAIN ########################
