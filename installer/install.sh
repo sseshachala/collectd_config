@@ -270,7 +270,7 @@ echo "    configuration at the top of this file."
 
 
 echo "Press [return] to continue"
-read
+# read
 
 
 # Check for arguments. If no arguments, we install everything, otherwise
